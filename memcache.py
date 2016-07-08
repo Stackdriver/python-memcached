@@ -45,6 +45,7 @@ More detailed documentation is available in the L{Client} class.
 
 import sys
 import socket
+import struct
 import time
 import os
 import re
@@ -1135,6 +1136,9 @@ class _Host(object):
         if self.socket:
             return self.socket
         s = socket.socket(self.family, socket.SOCK_STREAM)
+        # This is one way to prevent too many TIME_WAIT connections when using
+        # gevent and it's aggressive stdlib monkey patching.
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack('ii', 1, 0))
         if hasattr(s, 'settimeout'): s.settimeout(self.socket_timeout)
         try:
             s.connect(self.address)
